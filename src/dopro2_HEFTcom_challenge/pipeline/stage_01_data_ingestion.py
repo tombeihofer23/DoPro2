@@ -12,6 +12,8 @@ STAGE_NAME: Final = "Data Ingestion stage"
 
 
 class DataIngestionTrainingPipeline:
+    """Pipeline that load the data."""
+
     def __init__(self):
         pass
 

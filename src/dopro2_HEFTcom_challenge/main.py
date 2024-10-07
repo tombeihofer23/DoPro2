@@ -1,3 +1,5 @@
+"""Main program."""
+
 from typing import Final
 
 from loguru import logger

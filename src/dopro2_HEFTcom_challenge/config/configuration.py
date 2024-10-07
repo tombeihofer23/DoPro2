@@ -29,11 +29,11 @@ class ConfigurationManager:
         :param params_filepath: Path to params.yaml file
 
         """
-        with config_filepath.open("r") as f:
+        with config_filepath.open("r", encoding="utf-8") as f:
             self.config: dict = yaml.safe_load(f)
 
-        # with params_filepath.open("r") as f:
-        #     self.params: dict = yaml.safe_load(f)
+        with params_filepath.open("r", encoding="utf-8") as f:
+            self.params: dict = yaml.safe_load(f)
 
         os.makedirs(self.config["artifacts_root"], exist_ok=True)
         logger.info("created directory at: {}", self.config["artifacts_root"])
