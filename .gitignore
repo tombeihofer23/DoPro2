@@ -166,3 +166,6 @@ cython_debug/
 
 # test notebook
 test.ipynb
+
+# actifacts folder
+artifacts/*
