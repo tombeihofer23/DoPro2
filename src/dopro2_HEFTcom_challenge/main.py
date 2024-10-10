@@ -5,19 +5,34 @@ from typing import Final
 from loguru import logger
 
 from dopro2_HEFTcom_challenge.config import config_logger
-from dopro2_HEFTcom_challenge.pipeline import DataIngestionTrainingPipeline
+from dopro2_HEFTcom_challenge.pipeline import (
+    DataIngestionTrainingPipeline,
+    DataPreparationTrainingPipeline
+)
 
 
-STAGE_NAME: Final = "Data Ingestion stage"
+STAGE_NAME_01: Final = "Data Ingestion stage"
 
 # set up logging
 config_logger()
 
 try:
-    logger.info(">>> stage {} started <<<", STAGE_NAME)
+    logger.info(">>> stage {} started <<<", STAGE_NAME_01)
     obj = DataIngestionTrainingPipeline()
     obj.main()
-    logger.info(">>> stage {} completed <<<", STAGE_NAME)
+    logger.info(">>> stage {} completed <<<", STAGE_NAME_01)
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+
+STAGE_NAME_02: Final = "Data Preparation stage"
+
+try:
+    logger.info(">>> stage {} started <<<", STAGE_NAME_02)
+    obj = DataPreparationTrainingPipeline()
+    obj.main()
+    logger.info(">>> stage {} completed <<<", STAGE_NAME_02)
 except Exception as e:
     logger.exception(e)
     raise e

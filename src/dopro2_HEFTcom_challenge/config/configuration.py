@@ -10,7 +10,10 @@ from dopro2_HEFTcom_challenge.constants import (
     PARAMS_FILE_PATH,
     CONFIG_FILE_PATH
 )
-from dopro2_HEFTcom_challenge.entity import DataIngestionConfig
+from dopro2_HEFTcom_challenge.entity import (
+    DataIngestionConfig,
+    DataPreparationConfig
+)
 
 
 class ConfigurationManager:
@@ -56,3 +59,25 @@ class ConfigurationManager:
         )
 
         return data_ingestion_config
+
+    def get_data_preparation_config(self) -> DataPreparationConfig:
+        """
+        Get all config params and create folder in artifacts dir.
+
+        :return: values from config.yaml
+        :rtype: DataPreparationConfig
+        """
+        config = self.config["data_preparation"]
+
+        os.makedirs(config["root_dir"], exist_ok=True)
+        logger.info("created directory at: {}", config["root_dir"])
+
+        data_preparation_config = DataPreparationConfig(
+            root_dir=config["root_dir"],
+            weather_data_path=config["weather_data_path"],
+            energy_data_path=config["energy_data_path"],
+            training_data_path=config["training_data_path"],
+            test_data_path=config["test_data_path"]
+        )
+
+        return data_preparation_config
