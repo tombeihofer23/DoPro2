@@ -33,3 +33,17 @@ class DataPreparationConfig:
 
     test_data_path: Path
     """Directory into which test data will be loaded."""
+
+
+@dataclass(frozen=True)
+class TrainingConfig:
+    """Entity-Class for training config params."""
+
+    root_dir: Path
+    """Directory into which data will be loaded."""
+
+    trained_models_path: Path
+    """Directory where trained models will be stored."""
+
+    training_data_path: Path
+    """Directory where training data is stored."""

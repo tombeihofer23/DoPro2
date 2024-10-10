@@ -7,7 +7,8 @@ from loguru import logger
 from dopro2_HEFTcom_challenge.config import config_logger
 from dopro2_HEFTcom_challenge.pipeline import (
     DataIngestionTrainingPipeline,
-    DataPreparationTrainingPipeline
+    DataPreparationTrainingPipeline,
+    ModelTrainingPipeline
 )
 
 
@@ -33,6 +34,18 @@ try:
     obj = DataPreparationTrainingPipeline()
     obj.main()
     logger.info(">>> stage {} completed <<<", STAGE_NAME_02)
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+
+STAGE_NAME_03: Final = "Model training stage"
+
+try:
+    logger.info(">>> stage {} started <<<", STAGE_NAME_03)
+    obj = ModelTrainingPipeline()
+    obj.main()
+    logger.info(">>> stage {} completed <<<", STAGE_NAME_03)
 except Exception as e:
     logger.exception(e)
     raise e

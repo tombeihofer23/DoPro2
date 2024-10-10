@@ -10,3 +10,8 @@ data_preparation:
   energy_data_path: artifacts/raw_data/energy
   training_data_path: artifacts/prepared_data/train
   test_data_path: artifacts/prepared_data/tests
+
+training:
+  root_dir: artifacts/training
+  training_data_path: artifacts/prepared_data/model_data.parquet
+  trained_models_path: artifacts/training/models

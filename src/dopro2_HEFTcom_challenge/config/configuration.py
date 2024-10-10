@@ -12,7 +12,8 @@ from dopro2_HEFTcom_challenge.constants import (
 )
 from dopro2_HEFTcom_challenge.entity import (
     DataIngestionConfig,
-    DataPreparationConfig
+    DataPreparationConfig,
+    TrainingConfig
 )
 
 
@@ -81,3 +82,24 @@ class ConfigurationManager:
         )
 
         return data_preparation_config
+
+    def get_training_config(self) -> TrainingConfig:
+        """
+        Get all config params and create folder in artifacts dir.
+
+        :return: values from config.yaml
+        :rtype: TrainingConfig
+        """
+        config = self.config["training"]
+        # params = self.params
+
+        os.makedirs(config["root_dir"], exist_ok=True)
+        logger.info("created directory at: {}", config["root_dir"])
+
+        training_config = TrainingConfig(
+            root_dir=config["root_dir"],
+            trained_models_path=config["trained_models_path"],
+            training_data_path=config["training_data_path"]
+        )
+
+        return training_config

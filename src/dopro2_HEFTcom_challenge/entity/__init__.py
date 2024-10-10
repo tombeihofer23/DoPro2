@@ -2,11 +2,13 @@
 
 from dopro2_HEFTcom_challenge.entity.config_entity import (
     DataIngestionConfig,
-    DataPreparationConfig
+    DataPreparationConfig,
+    TrainingConfig
 )
 
 
 __all__: list[str] = [
     "DataIngestionConfig",
-    "DataPreparationConfig"
+    "DataPreparationConfig",
+    "TrainingConfig"
 ]
