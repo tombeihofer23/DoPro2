@@ -13,6 +13,7 @@ from dopro2_HEFTcom_challenge.constants import (
 from dopro2_HEFTcom_challenge.entity import (
     DataIngestionConfig,
     DataPreparationConfig,
+    EvaluationConfig,
     TrainingConfig
 )
 
@@ -103,3 +104,22 @@ class ConfigurationManager:
         )
 
         return training_config
+
+    def get_evaluation_config(self) -> EvaluationConfig:
+        """
+        Get all config params and create folder in artifacts dir.
+
+        :return: values from config.yaml
+        :rtype: EvaluationConfig
+        """
+
+        config = self.config["evaluation"]
+
+        evaluation_config = EvaluationConfig(
+            path_to_models=config["path_to_models"],
+            training_data_path=config["training_data_path"],
+            all_params=self.params,
+            mlflow_uri=config["mlflow_uri"]
+        )
+
+        return evaluation_config

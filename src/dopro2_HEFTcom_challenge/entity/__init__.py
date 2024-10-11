@@ -3,6 +3,7 @@
 from dopro2_HEFTcom_challenge.entity.config_entity import (
     DataIngestionConfig,
     DataPreparationConfig,
+    EvaluationConfig,
     TrainingConfig
 )
 
@@ -10,5 +11,6 @@ from dopro2_HEFTcom_challenge.entity.config_entity import (
 __all__: list[str] = [
     "DataIngestionConfig",
     "DataPreparationConfig",
+    "EvaluationConfig",
     "TrainingConfig"
 ]

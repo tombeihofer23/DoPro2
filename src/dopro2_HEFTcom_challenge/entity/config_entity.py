@@ -47,3 +47,20 @@ class TrainingConfig:
 
     training_data_path: Path
     """Directory where training data is stored."""
+
+
+@dataclass(frozen=True)
+class EvaluationConfig:
+    """Entity-Class for data evaluation config params."""
+
+    path_to_models: Path
+    """Directory in which models are stored."""
+
+    training_data_path: Path
+    """Directory where training data is stored."""
+
+    all_params: dict
+    """Model parameters."""
+
+    mlflow_uri: str
+    """URL to MLFlow dashboard."""

@@ -15,3 +15,8 @@ training:
   root_dir: artifacts/training
   training_data_path: artifacts/prepared_data/model_data.parquet
   trained_models_path: artifacts/training/models
+
+evaluation:
+  path_to_models: artifacts/training/models
+  training_data_path: artifacts/prepared_data/model_data.parquet
+  mlflow_uri: https://dagshub.com/tombeihofer23/DoPro2.mlflow

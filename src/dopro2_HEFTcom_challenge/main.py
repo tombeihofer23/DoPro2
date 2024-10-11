@@ -8,6 +8,7 @@ from dopro2_HEFTcom_challenge.config import config_logger
 from dopro2_HEFTcom_challenge.pipeline import (
     DataIngestionTrainingPipeline,
     DataPreparationTrainingPipeline,
+    ModelEvaluationPipeline,
     ModelTrainingPipeline
 )
 
@@ -46,6 +47,18 @@ try:
     obj = ModelTrainingPipeline()
     obj.main()
     logger.info(">>> stage {} completed <<<", STAGE_NAME_03)
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+
+STAGE_NAME_04: Final = "Model evaluation stage"
+
+try:
+    logger.info(">>> stage {} started <<<", STAGE_NAME_04)
+    obj = ModelEvaluationPipeline()
+    obj.main()
+    logger.info(">>> stage {} completed <<<", STAGE_NAME_04)
 except Exception as e:
     logger.exception(e)
     raise e
