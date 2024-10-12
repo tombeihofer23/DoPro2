@@ -8,7 +8,9 @@ from dopro2_HEFTcom_challenge.components import Evaluation
 from dopro2_HEFTcom_challenge.config import ConfigurationManager
 
 import dagshub
-dagshub.init(repo_owner="tombeihofer23", repo_name="DoPro2", mlflow=True)
+dagshub.init(  # type: ignore
+    repo_owner="tombeihofer23", repo_name="DoPro2", mlflow=True
+)
 
 
 STAGE_NAME: Final = "Model evaluation stage"

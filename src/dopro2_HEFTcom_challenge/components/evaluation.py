@@ -1,6 +1,5 @@
 """Model evaluation component."""
 
-from pathlib import Path
 from urllib.parse import urlparse
 
 from loguru import logger
@@ -8,9 +7,9 @@ import mlflow
 import mlflow.statsmodels
 import pandas as pd
 from statsmodels.base.model import Results
-from statsmodels.regression.quantile_regression import QuantRegResults
 
 from dopro2_HEFTcom_challenge.entity import EvaluationConfig
+from dopro2_HEFTcom_challenge.utils import load_models
 
 
 class Evaluation:
@@ -31,14 +30,6 @@ class Evaluation:
         self.config = config
 
     @staticmethod
-    def load_models(path: Path) -> list[Results]:
-        model_files = Path(path).glob("*.pickle")
-        models = []
-        for file in model_files:
-            models.append(QuantRegResults.load(file))
-        return models
-
-    @staticmethod
     def pinball_score(df: pd.DataFrame) -> float:
         def pinball(y, q, alpha):
             return (y - q) * alpha * (y >= q) + (q - y) * (1 - alpha) * (y < q)
@@ -55,10 +46,11 @@ class Evaluation:
         return sum(score) / len(score)
 
     def make_predictions(self):
-        self.models = self.load_models(self.config.path_to_models)
+        logger.info("Loading the trained models")
+        self.models = load_models(self.config.path_to_models)
         test_data = pd.read_parquet(self.config.training_data_path).iloc[400000:]
-        self.sample_data = test_data.iloc[:10]
         # nur jetzt zum testen mit iloc
+        self.sample_data = test_data.iloc[:5]
         logger.info("Start making predictions on the trained models.")
         for i, model in enumerate(self.models):
             test_data = test_data.copy()
@@ -89,10 +81,11 @@ class Evaluation:
                 for i, model in enumerate(self.models):
                     mlflow.statsmodels.log_model(
                         model, "model", registered_model_name=f"q{(i + 1) * 10}",
-                        input_example=self.sample_data, signature=False
+                        input_example=self.sample_data, signature=False  # type: ignore
                     )
             else:
                 for _, model in enumerate(self.models):
                     mlflow.statsmodels.log_model(
-                        model, "model", input_example=self.sample_data, signature=False
+                        model, "model", input_example=self.sample_data,
+                        signature=False  # type: ignore
                     )
