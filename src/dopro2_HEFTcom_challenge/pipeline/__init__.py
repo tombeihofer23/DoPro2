@@ -7,11 +7,13 @@ from dopro2_HEFTcom_challenge.pipeline.stage_02_data_preparation import \
 from dopro2_HEFTcom_challenge.pipeline.stage_03_training import ModelTrainingPipeline
 from dopro2_HEFTcom_challenge.pipeline.stage_04_evaluation import \
     ModelEvaluationPipeline
+from dopro2_HEFTcom_challenge.pipeline.stage_05_prediction import PredictionPipeline
 
 
 __all__: list[str] = [
     "DataIngestionTrainingPipeline",
     "DataPreparationTrainingPipeline",
     "ModelEvaluationPipeline",
-    "ModelTrainingPipeline"
+    "ModelTrainingPipeline",
+    "PredictionPipeline"
 ]
