@@ -10,6 +10,12 @@ import pandas as pd
 import requests
 from requests import Session
 
+from dopro2_HEFTcom_challenge.utils import (
+    day_ahead_market_times,
+    load_weather_data,
+    weather_df_to_xr
+)
+
 
 class RebaseAPI:
     """Rebase-API-Klasse zum abrufen und abgeben der Daten."""
@@ -157,11 +163,11 @@ class RebaseAPI:
         )
 
         df = pd.DataFrame()
-        for _, point in enumerate(data):
-            new_df = pd.DataFrame(data[point])
-            new_df["point"] = point
-            new_df["latitude"] = lats[point]
-            new_df["longitude"] = lons[point]
+        for i, _ in enumerate(data):
+            new_df = pd.DataFrame(data[i])
+            new_df["point"] = i
+            new_df["latitude"] = lats[i]
+            new_df["longitude"] = lons[i]
             df = pd.concat([df, new_df])
 
         return df
@@ -235,20 +241,57 @@ class RebaseAPI:
                     "TotalPrecipitation, RelativeHumidity"
         return self.query_weather_latest_points(model, lats, lons, variables)
 
+    def get_latest_forecast_data(self) -> pd.DataFrame:
+        """
+        Load lates data from rebase api and puts it in the right
+        form for prediction.
+
+        :return: data in the correct form for the model
+        :rtype: DataFrame
+        """
+        raw_hornsea = self.get_hornsea_dwd()
+        hornsea_df = load_weather_data(weather_df_to_xr(raw_hornsea),
+                                       dtype="hornsea", api=True)
+
+        raw_solar = self.get_pes10_nwp("DWD_ICON-EU")
+        solar_df = load_weather_data(weather_df_to_xr(raw_solar),
+                                     dtype="solar", api=True)
+
+        latest_forecast_df = (
+            hornsea_df
+            .merge(solar_df, how="outer", on=["reference_time", "valid_time"])
+            .set_index("valid_time")
+            .resample("30min")
+            .interpolate("linear", limit=5)
+            .rename(columns={"Temperature_x": "temp_hornsea",
+                             "Temperature_y": "temp_solar",
+                             "hours_after_x": "hours_after"})
+            .drop(columns="hours_after_y", axis=1)
+        )
+        day_ahead_market_times_df = day_ahead_market_times()
+        latest_forecast_df = (
+            latest_forecast_df
+            .loc[day_ahead_market_times_df]
+            .reset_index(names="valid_time")
+        )
+        latest_forecast_df["year"] = latest_forecast_df.valid_time.dt.year
+        latest_forecast_df["month"] = latest_forecast_df.valid_time.dt.month
+        latest_forecast_df["day"] = latest_forecast_df.valid_time.dt.day
+        latest_forecast_df["hour"] = latest_forecast_df.valid_time.dt.hour
+
+        columns = ["hours_after", "year", "month", "day", "hour", "CloudCover",
+                   "SolarDownwardRadiation", "temp_hornsea", "RelativeHumidity",
+                   "temp_solar", "WindDirection", "WindDirection:100", "WindSpeed",
+                   "WindSpeed:100", "valid_time"]
+        latest_forecast_df = latest_forecast_df.dropna()[columns]
+
+        return latest_forecast_df
+
     def submit(self, data) -> None:
         """Ergebnisse zur API schicken."""
 
         url = f"{self.base_url}/challenges/{self.challenge_id}/submit"
 
         resp = self.session.post(url, headers=self.headers, json=data)
-
-        print(resp)
-        print(resp.text)
-
-        # Write log file
-        with open(
-            f"logs/sub_{pd.Timestamp("today").strftime("%Y%m%d-%H%M%S")}.txt",
-            mode="w",
-            encoding="utf-8"
-        ) as text_file:
-            text_file.write(resp.text)
+        logger.info(resp)
+        logger.info(resp.text)
