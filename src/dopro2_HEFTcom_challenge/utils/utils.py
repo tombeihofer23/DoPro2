@@ -2,9 +2,11 @@
 
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from loguru import logger
 import pandas as pd
+import xarray as xr
 
 from statsmodels.base.model import Results
 from statsmodels.regression.quantile_regression import QuantRegResults
@@ -13,7 +15,9 @@ from statsmodels.regression.quantile_regression import QuantRegResults
 __all__: list[str] = [
     "day_ahead_market_times",
     "load_models",
-    "prep_submission_in_json_format"
+    "load_weather_data",
+    "prep_submission_in_json_format",
+    "weather_df_to_xr"
 ]
 
 
@@ -84,18 +88,18 @@ def prep_submission_in_json_format(submission_data: pd.DataFrame) -> dict:
 
     for i in range(len(submission_data.index)):
         submission.append({
-            "timestamp": submission_data["datetime"][i].isoformat(),
-            "market_bid": submission_data["market_bid"][i],
+            "timestamp": submission_data["valid_time"][i].isoformat(),
+            "market_bid": float(submission_data["market_bid"][i]),
             "probabilistic_forecast": {
-                10: submission_data["q10"][i],
-                20: submission_data["q20"][i],
-                30: submission_data["q30"][i],
-                40: submission_data["q40"][i],
-                50: submission_data["q50"][i],
-                60: submission_data["q60"][i],
-                70: submission_data["q70"][i],
-                80: submission_data["q80"][i],
-                90: submission_data["q90"][i],
+                10: float(submission_data["q10"][i]),
+                20: float(submission_data["q20"][i]),
+                30: float(submission_data["q30"][i]),
+                40: float(submission_data["q40"][i]),
+                50: float(submission_data["q50"][i]),
+                60: float(submission_data["q60"][i]),
+                70: float(submission_data["q70"][i]),
+                80: float(submission_data["q80"][i]),
+                90: float(submission_data["q90"][i]),
             }
         })
 
@@ -105,3 +109,87 @@ def prep_submission_in_json_format(submission_data: pd.DataFrame) -> dict:
     }
 
     return data
+
+
+def weather_df_to_xr(weather_data: pd.DataFrame) -> xr.Dataset:
+    """
+    Turns rebase api weather dataframe into xarray Dataset.
+
+    :param weather_data: weather data from api call
+    :return: weather data as xarray Dataset
+    :rtype: Dataset
+    """
+
+    weather_data["ref_datetime"] = pd.to_datetime(weather_data["ref_datetime"],
+                                                  utc=True)
+    weather_data["valid_datetime"] = pd.to_datetime(weather_data["valid_datetime"],
+                                                    utc=True)
+
+    if "point" in weather_data.columns:
+        weather_data = weather_data.set_index(["ref_datetime",
+                                               "valid_datetime",
+                                               "point"])
+    else:
+        weather_data = pd.melt(weather_data, id_vars=["ref_datetime", "valid_datetime"])
+
+        weather_data = (
+            pd.concat(
+                [weather_data, weather_data["variable"].str.split("_", expand=True)],
+                axis=1
+            )
+            .drop(["variable", 1, 3], axis=1)
+            .rename(columns={0: "variable", 2: "latitude", 4: "longitude"})
+            .set_index(["ref_datetime", "valid_datetime",
+                        "longitude", "latitude"])
+            .pivot(columns="variable", values="value")
+        )
+
+    weather_data = weather_data.to_xarray()  # type: ignore
+
+    weather_data["ref_datetime"] = pd.DatetimeIndex(
+        weather_data["ref_datetime"].values, tz="UTC"
+    )
+    weather_data["valid_datetime"] = pd.DatetimeIndex(
+        weather_data["valid_datetime"].values, tz="UTC"
+    )
+
+    return weather_data  # type: ignore
+
+
+def load_weather_data(
+    dataset: xr.Dataset,
+    dtype: Literal["hornsea", "solar"],
+    api: bool = False,
+) -> pd.DataFrame:
+    """
+    Load xarray weather data, preprocess it and return an dataframe.
+
+    :param dataset: xarray dataset with weather data
+    :param dtype: wind (hornsea) or solar data
+    :param api: True, if data comes from api call, else from a dataset
+    :return: DataFrame with preprocessed data
+    :rtype: DataFrame
+    """
+
+    dimension = ["latitude", "longitude"] if dtype == "hornsea" else ["point"]
+    df = (
+        dataset
+        .mean(dim=dimension)
+        .to_dataframe()
+        .reset_index()
+    ).rename(columns={"ref_datetime": "reference_time", "valid_datetime": "valid_time"})
+    if api:
+        df["hours_after"] = ((df["valid_time"] - df["reference_time"])
+                             .dt.total_seconds() // 3600).astype(int)
+        return df
+    df = (
+        df.assign(
+            reference_time=df["reference_time"].dt.tz_localize("UTC"),
+            hours_after=df["valid_time"],
+            valid_time=(
+                df["reference_time"] + pd.to_timedelta(df["valid_time"], unit="hours")
+            ).dt.tz_localize("UTC")
+        )
+    )
+
+    return df
