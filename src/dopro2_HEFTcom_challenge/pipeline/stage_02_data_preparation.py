@@ -21,10 +21,10 @@ class DataPreparationTrainingPipeline:
         config = ConfigurationManager()
         data_preparation_config = config.get_data_preparation_config()
         data_preparation = DataPreparation(config=data_preparation_config)
-        data_preparation.cleaning_energy_data()
-        data_preparation.cleaning_weather_data()
-        data_preparation.merge_data()
-        data_preparation.transform_data()
+        energy = data_preparation.cleaning_energy_data()
+        hornsea, solar = data_preparation.cleaning_weather_data()
+        data_preparation.merge_data(energy, hornsea, solar)
+        # data_preparation.transform_data()
 
 
 if __name__ == "__main__":

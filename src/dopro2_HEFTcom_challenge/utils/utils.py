@@ -157,7 +157,7 @@ def weather_df_to_xr(weather_data: pd.DataFrame) -> xr.Dataset:
 
 
 def load_weather_data(
-    dataset: xr.Dataset,
+    input: xr.Dataset | Path,
     dtype: Literal["hornsea", "solar"],
     api: bool = False,
 ) -> pd.DataFrame:
@@ -171,6 +171,11 @@ def load_weather_data(
     :rtype: DataFrame
     """
 
+    if isinstance(input, Path):
+        dataset = xr.open_dataset(input)
+    else:
+        dataset = input
+
     dimension = ["latitude", "longitude"] if dtype == "hornsea" else ["point"]
     df = (
         dataset
@@ -181,6 +186,13 @@ def load_weather_data(
     if api:
         df["hours_after"] = ((df["valid_time"] - df["reference_time"])
                              .dt.total_seconds() // 3600).astype(int)
+        df = (
+            df
+            .set_index("valid_time").groupby("reference_time")
+            .resample("30min").interpolate("linear")
+            .drop(columns="reference_time", axis=1)
+            .reset_index()
+        )
         return df
     df = (
         df.assign(
@@ -189,7 +201,10 @@ def load_weather_data(
             valid_time=(
                 df["reference_time"] + pd.to_timedelta(df["valid_time"], unit="hours")
             ).dt.tz_localize("UTC")
-        )
+        ).set_index("valid_time").groupby("reference_time")
+         .resample("30min").interpolate("linear")
+         .drop(columns="reference_time", axis=1)
+         .reset_index()
     )
 
     return df
