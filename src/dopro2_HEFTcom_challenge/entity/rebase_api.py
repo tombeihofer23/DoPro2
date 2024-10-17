@@ -260,9 +260,9 @@ class RebaseAPI:
         latest_forecast_df = (
             hornsea_df
             .merge(solar_df, how="outer", on=["reference_time", "valid_time"])
-            .set_index("valid_time")
-            .resample("30min")
-            .interpolate("linear", limit=5)
+            # .set_index("valid_time")
+            # .resample("30min")
+            # .interpolate("linear", limit=5)
             .rename(columns={"Temperature_x": "temp_hornsea",
                              "Temperature_y": "temp_solar",
                              "hours_after_x": "hours_after"})
