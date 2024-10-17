@@ -23,8 +23,8 @@ class DataPreparationTrainingPipeline:
         data_preparation = DataPreparation(config=data_preparation_config)
         energy = data_preparation.cleaning_energy_data()
         hornsea, solar = data_preparation.cleaning_weather_data()
-        data_preparation.merge_data(energy, hornsea, solar)
-        # data_preparation.transform_data()
+        merged_data = data_preparation.merge_data(energy, hornsea, solar)
+        data_preparation.splitting_data(merged_data)
 
 
 if __name__ == "__main__":
