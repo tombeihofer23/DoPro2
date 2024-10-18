@@ -25,6 +25,7 @@ class DataPreparationTrainingPipeline:
         hornsea, solar = data_preparation.cleaning_weather_data()
         merged_data = data_preparation.merge_data(energy, hornsea, solar)
         data_preparation.splitting_data(merged_data)
+        data_preparation.transform_data()
 
 
 if __name__ == "__main__":
