@@ -92,6 +92,13 @@ class DataPreparation:
             .drop(columns="hours_after_y", axis=1)
         )
 
+        merged_table = merged_table.assign(
+            year=merged_table["valid_time"].dt.year,
+            month=merged_table["valid_time"].dt.month,
+            day=merged_table["valid_time"].dt.day,
+            hour=merged_table["valid_time"].dt.hour
+        )
+
         merged_table.to_parquet(f"{self.config.root_dir}/merged_data.parquet")
         logger.info("Merged energy and weather data: file safed under {}",
                     self.config.root_dir)
@@ -113,10 +120,10 @@ class DataPreparation:
         label_wind: Final = "Wind_MWh_credit"  # mglw. in config-Datein schreiben
         featues_wind: list = ["RelativeHumidity", "temp_hornsea", "WindDirection",
                               "WindDirection:100", "WindSpeed", "WindSpeed:100",
-                              "hours_after"]
+                              "year", "month", "day", "hour", "hours_after"]
         label_solar: Final = "Solar_MWh_credit"  # mglw. in config-Datein schreiben
         featues_solar: list = ["CloudCover", "SolarDownwardRadiation", "temp_solar",
-                               "hours_after"]
+                               "year", "month", "day", "hour", "hours_after"]
 
         index_wind_train = df_train[df_train[label_wind].isna()].index
         index_solar_train = df_train[df_train[label_solar].isna()].index
@@ -151,6 +158,8 @@ class DataPreparation:
     def transform_data(self) -> None:
         logger.info("Start transforming (feature engineering) the data")
 
+        logger.info("Transforming the wind data")
+
         x_wind_train = pd.read_parquet(
             f"{self.config.training_data_path}/x_wind_train.parquet"
         )
@@ -172,13 +181,13 @@ class DataPreparation:
         x_wind_train["WindSpeedPCA"] = windspeed_train_pca
         x_wind_test["WindSpeedPCA"] = windspeed_test_pca
 
-        # transformed_df = df.assign(
-        #     year=df["valid_time"].dt.year,
-        #     month=df["valid_time"].dt.month,
-        #     day=df["valid_time"].dt.day,
-        #     hour=df["valid_time"].dt.hour
-        # )
+        x_wind_train.drop(columns=["WindSpeed", "WindSpeed:100"], axis=1, inplace=True)
+        x_wind_test.drop(columns=["WindSpeed", "WindSpeed:100"], axis=1, inplace=True)
 
+        x_wind_train.to_parquet(
+            f"{self.config.training_data_path}/x_wind_train.parquet"
+        )
+        x_wind_test.to_parquet(f"{self.config.test_data_path}/x_wind_test.parquet")
         # transformed_df.to_parquet(f"{self.config.root_dir}/transformed_data.parquet")
         # logger.info("Transformed data: file safed under {}",
         #             self.config.root_dir)
