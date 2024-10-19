@@ -75,4 +75,5 @@ wcwidth==0.2.13
 win32-setctime==1.1.0
 wrapt==1.16.0
 xarray==2024.9.0
+xgboost==2.1.1
 yarl==1.13.1

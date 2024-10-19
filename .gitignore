@@ -168,4 +168,4 @@ cython_debug/
 test.ipynb
 
 # actifacts folder
-artifacts/*
+# artifacts/*
