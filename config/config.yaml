@@ -8,8 +8,8 @@ data_preparation:
   root_dir: artifacts/prepared_data
   weather_data_path: artifacts/raw_data/weather
   energy_data_path: artifacts/raw_data/energy
-  training_data_path: artifacts/prepared_data/train
-  test_data_path: artifacts/prepared_data/tests
+  training_data_path: artifacts/prepared_data/train_data
+  test_data_path: artifacts/prepared_data/test_data
 
 training:
   root_dir: artifacts/training
