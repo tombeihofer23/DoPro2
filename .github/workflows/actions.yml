@@ -1,0 +1,17 @@
+name: daily-prediction
+
+on:
+  schedule:
+    - cron: '*/1 * * * *' # Every day at 07:30
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: xgboost-model
+          
+      - name: first-step
+        run: echo "hello world"
