@@ -40,7 +40,7 @@ class PredictionPipeline:
         submission_data_json = prep_submission_in_json_format(submission_data)
         print(submission_data_json)
 
-        # self.api.submit(submission_data_json)
+        self.api.submit(submission_data_json)
 
 
 if __name__ == "__main__":
