@@ -2,16 +2,29 @@ name: daily-prediction
 
 on:
   schedule:
-    - cron: '*/1 * * * *' # Every day at 07:30
+    - cron: '*/5 * * * *' # Every day at 07:30
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout to prediction repo
       - uses: actions/checkout@v3
         with:
           ref: xgboost-model
-          
-      - name: first-step
-        run: echo "hello world"
+
+      - name: setup python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: install python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: execute prediction
+        env: 
+          REBASE_API_KEY: ${{ secrets.REBASE_API_KEY }}
+        run: python src/dopro2_HEFTcom_challenge/main.py
