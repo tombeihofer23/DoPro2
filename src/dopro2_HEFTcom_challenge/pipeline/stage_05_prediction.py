@@ -1,5 +1,7 @@
 """Fifth ML Pipeline stage: predict on new data."""
 
+from pathlib import Path
+
 import pandas as pd
 from xgboost import XGBRegressor
 
@@ -22,7 +24,8 @@ class PredictionPipeline:
 
         latest_data = self.api.get_latest_forecast_data()
         model = XGBRegressor()
-        model.load_model(r"artifacts\training\models\total_14-10-24.json")
+        model_path = Path("artifacts/training/models/total_14-10-24.json")
+        model.load_model(model_path)
 
         predictions = model.predict(
             latest_data.drop(columns="valid_time", axis=1).to_numpy()
