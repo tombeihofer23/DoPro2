@@ -2,7 +2,7 @@ name: daily-prediction
 
 on:
   schedule:
-    - cron: '0 8 * * *' # Every day at 08:00 UTC
+    - cron: '0 4 * * *' # Every day at 04:00am UTC (06:00 UTC+2)
   workflow_dispatch:
 
 jobs:
