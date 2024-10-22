@@ -208,3 +208,11 @@ def load_weather_data(
     )
 
     return df
+
+def remove_upperbound(merged_table_features, percentage=0.02):
+    columns = ['SolarDownwardRadiation', 'temp_hornsea', 'temp_solar', 'WindSpeed', 'WindSpeed:100']
+    n = round(len(merged_table_features) * percentage)
+    indexes = set()
+    for col in columns:
+        indexes.update(set(merged_table_features[col].nlargest(n).index))
+    return merged_table_features.drop(indexes).reset_index(drop=True)
