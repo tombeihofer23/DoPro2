@@ -148,17 +148,21 @@ class DataPreparation:
         os.makedirs(self.config.test_data_path, exist_ok=True)
         logger.info("created directory at: {}", self.config.test_data_path)
 
-        df_train = df_full.loc[df_full.reference_time < "2023-05-20"]
-        df_test = df_full.loc[df_full.reference_time >= "2023-05-20"]
+        df_train = df_full.loc[~df_full.reference_time.between(left="2023-09-01", right="2023-12-01", inclusive="left")]
+        df_test = df_full.loc[df_full.reference_time.between(left="2023-09-01", right="2023-12-01", inclusive="left")]
 
         label_wind: Final = "Wind_MWh_credit"  # mglw. in config-Datein schreiben
-        featues_wind: list = ["RelativeHumidity", "temp_hornsea", "WindDirection",
+        featues_wind: list = ["RelativeHumidity", "temp_hornsea", 'temp_solar', "WindDirection",
                               "WindDirection:100", "WindSpeed", "WindSpeed:100",
-                              "year", "month", "day", "hour", "hours_after"]
+                              "year", "month", "day", "hour", "hours_after", 'wind_interaction',
+                              'wind_interaction_100', 'humidity_wind_interaction', 'wind_gradient',
+                              'CloudCover_lag_1h', 'cloud_cover_change']
         label_solar: Final = "Solar_MWh_credit"  # mglw. in config-Datein schreiben
-        featues_solar: list = ["CloudCover", "SolarDownwardRadiation", "temp_solar",
-                               "year", "month", "day", "hour", "hours_after"]
-
+        featues_solar: list = ["CloudCover", "SolarDownwardRadiation", "temp_hornsea",
+                               "temp_solar", "year", "month", "day", "hour", "hours_after",
+                               'adjusted_solar_radiation', 'temp_x_solar_interaction',
+                               'temp_y_solar_interaction']
+       
         index_wind_train = df_train[df_train[label_wind].isna()].index
         index_solar_train = df_train[df_train[label_solar].isna()].index
         index_wind_test = df_test[df_test[label_wind].isna()].index
