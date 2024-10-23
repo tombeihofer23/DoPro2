@@ -11,11 +11,19 @@ import pandas as pd
 import re
 # import xarray as xr
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import (
+    OneHotEncoder,
+    StandardScaler
+)
 from sklearn.pipeline import Pipeline
 
 from dopro2_HEFTcom_challenge.entity import DataPreparationConfig
-from dopro2_HEFTcom_challenge.utils import load_weather_data
+from dopro2_HEFTcom_challenge.utils import (
+    categorize_wind_dir,
+    get_season,
+    get_time_of_day,
+    load_weather_data
+)
 
 
 class DataPreparation:
@@ -97,17 +105,45 @@ class DataPreparation:
             year=merged_table["valid_time"].dt.year,
             month=merged_table["valid_time"].dt.month,
             day=merged_table["valid_time"].dt.day,
-            hour=merged_table["valid_time"].dt.hour
+            hour=merged_table["valid_time"].dt.hour,
+            season=merged_table["valid_time"].dt.month.apply(get_season),
+            time_of_day=merged_table["valid_time"].dt.hour.apply(get_time_of_day),
+            wind_dir_cat=merged_table["WindDirection:100"].apply(categorize_wind_dir)
         )
 
-        # Der Zeitraum der Messungen endet am 19.05.2024 23:30 Uhr -> Alle Wettervorhersagen danach sind nicht relevant und können gedropped werden
-        merged_table = merged_table.drop(merged_table[merged_table.valid_time >= "2024-05-20"].index).reset_index(drop=True)
+        time_of_day_categories = merged_table[["time_of_day"]]
+        time_of_day_encoder = OneHotEncoder()
+        time_of_day_encoded = time_of_day_encoder.fit_transform(time_of_day_categories)
+        time_of_day_encoded_df = pd.DataFrame(
+            time_of_day_encoded.toarray(),
+            columns=time_of_day_encoder.get_feature_names_out()
+        )
+
+        season_categories = merged_table[["season"]]
+        season_encoder = OneHotEncoder()
+        season_encoded = season_encoder.fit_transform(season_categories)
+        season_encoded_df = pd.DataFrame(
+            season_encoded.toarray(),
+            columns=season_encoder.get_feature_names_out()
+        )
+
+        windDir_categories = merged_table[["wind_dir_cat"]]
+        windDir_encoder = OneHotEncoder()
+        windDir_encoded = windDir_encoder.fit_transform(windDir_categories)
+        windDir_encoded_df = pd.DataFrame(
+            windDir_encoded.toarray(),
+            columns=windDir_encoder.get_feature_names_out()
+        )
+
+        concat_tables = [merged_table, time_of_day_encoded_df,
+                         season_encoded_df, windDir_encoded_df]
+        merged_table = pd.concat(concat_tables, axis=1)
 
         merged_table.to_parquet(f"{self.config.root_dir}/merged_data.parquet")
         logger.info("Merged energy and weather data: file safed under {}",
                     self.config.root_dir)
         return merged_table
-      
+
     def create_features(self, merged_table):
         merged_table_features = merged_table
        
@@ -156,43 +192,51 @@ class DataPreparation:
                               "WindDirection:100", "WindSpeed", "WindSpeed:100",
                               "year", "month", "day", "hour", "hours_after", 'wind_interaction',
                               'wind_interaction_100', 'humidity_wind_interaction', 'wind_gradient',
-                              'CloudCover_lag_1h', 'cloud_cover_change']
+                              'CloudCover_lag_1h', 'cloud_cover_change', 'time_of_day_afternoon',
+                              'time_of_day_morning', 'time_of_day_night', 'season_autumn',
+                              'season_spring', 'season_summer', 'season_winter', 'wind_dir_cat_E', 
+                              'wind_dir_cat_N', 'wind_dir_cat_NE', 'wind_dir_cat_NW',
+                              'wind_dir_cat_S', 'wind_dir_cat_SE', 'wind_dir_cat_SW', 'wind_dir_cat_W']
         label_solar: Final = "Solar_MWh_credit"  # mglw. in config-Datein schreiben
         featues_solar: list = ["CloudCover", "SolarDownwardRadiation", "temp_hornsea",
                                "temp_solar", "year", "month", "day", "hour", "hours_after",
                                'adjusted_solar_radiation', 'temp_x_solar_interaction',
-                               'temp_y_solar_interaction']
-       
+                               'temp_y_solar_interaction', 'time_of_day_afternoon',
+                               'time_of_day_morning', 'time_of_day_night', 'season_autumn',
+                               'season_spring', 'season_summer', 'season_winter', 'wind_dir_cat_E', 
+                               'wind_dir_cat_N', 'wind_dir_cat_NE', 'wind_dir_cat_NW',
+                               'wind_dir_cat_S', 'wind_dir_cat_SE', 'wind_dir_cat_SW', 'wind_dir_cat_W']
+
         index_wind_train = df_train[df_train[label_wind].isna()].index
         index_solar_train = df_train[df_train[label_solar].isna()].index
         index_wind_test = df_test[df_test[label_wind].isna()].index
         index_solar_test = df_test[df_test[label_solar].isna()].index
 
-        x_wind_train = df_train.drop(index_wind_train)[featues_wind]
+        x_wind_train = df_train.drop(index_wind_train)[featues_wind].reset_index(drop=True)
         x_wind_train.to_parquet(
             f"{self.config.training_data_path}/x_wind_train.parquet"
         )
-        x_wind_test = df_test.drop(index_wind_test)[featues_wind]
+        x_wind_test = df_test.drop(index_wind_test)[featues_wind].reset_index(drop=True)
         x_wind_test.to_parquet(f"{self.config.test_data_path}/x_wind_test.parquet")
-        x_solar_train = df_train.drop(index_solar_train)[featues_solar]
+        x_solar_train = df_train.drop(index_solar_train)[featues_solar].reset_index(drop=True)
         x_solar_train.to_parquet(
             f"{self.config.training_data_path}/x_solar_train.parquet"
         )
-        x_solar_test = df_test.drop(index_solar_test)[featues_solar]
+        x_solar_test = df_test.drop(index_solar_test)[featues_solar].reset_index(drop=True)
         x_solar_test.to_parquet(f"{self.config.test_data_path}/x_solar_test.parquet")
-        y_wind_train = df_train.drop(index_wind_train)[label_wind]
+        y_wind_train = df_train.drop(index_wind_train)[label_wind].reset_index(drop=True)
         y_wind_train.to_frame()\
             .to_parquet(f"{self.config.training_data_path}/y_wind_train.parquet")
-        y_wind_test = df_test.drop(index_wind_test)[label_wind]
+        y_wind_test = df_test.drop(index_wind_test)[label_wind].reset_index(drop=True)
         y_wind_test.to_frame()\
             .to_parquet(f"{self.config.test_data_path}/y_wind_test.parquet")
-        y_solar_train = df_train.drop(index_solar_train)[label_solar]
+        y_solar_train = df_train.drop(index_solar_train)[label_solar].reset_index(drop=True)
         y_solar_train.to_frame()\
             .to_parquet(f"{self.config.training_data_path}/y_solar_train.parquet")
-        y_solar_test = df_test.drop(index_solar_test)[label_solar]
+        y_solar_test = df_test.drop(index_solar_test)[label_solar].reset_index(drop=True)
         y_solar_test.to_frame()\
             .to_parquet(f"{self.config.test_data_path}/y_solar_test.parquet")
-    
+
     def transform_data(self) -> None:
         logger.info("Start transforming (feature engineering) the data")
 
