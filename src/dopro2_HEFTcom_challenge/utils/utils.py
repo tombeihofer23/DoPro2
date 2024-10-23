@@ -13,6 +13,9 @@ from statsmodels.regression.quantile_regression import QuantRegResults
 
 
 __all__: list[str] = [
+    "categorize_wind_dir",
+    "get_season",
+    "get_time_of_day",
     "day_ahead_market_times",
     "load_models",
     "load_weather_data",
@@ -208,6 +211,46 @@ def load_weather_data(
     )
 
     return df
+
+
+def get_time_of_day(hour):
+    if 6 <= hour < 12:
+        return "morning"
+    elif 12 <= hour < 18:
+        return "afternoon"
+    else:
+        return "night"
+
+
+def get_season(month):
+    if month in [12, 1, 2]:
+        return "winter"
+    elif month in [3, 4, 5]:
+        return "spring"
+    elif month in [6, 7, 8]:
+        return "summer"
+    else:
+        return "autumn"
+
+
+def categorize_wind_dir(degree):
+    if degree >= 337.5 or degree < 22.5:
+        return "N"
+    elif 22.5 <= degree < 67.5:
+        return "NE"
+    elif 67.5 <= degree < 112.5:
+        return "E"
+    elif 112.5 <= degree < 157.5:
+        return "SE"
+    elif 157.5 <= degree < 202.5:
+        return "S"
+    elif 202.5 <= degree < 247.5:
+        return "SW"
+    elif 247.5 <= degree < 292.5:
+        return "W"
+    else:
+        return "NW"
+
 
 def remove_upperbound(merged_table_features, percentage=0.02):
     columns = ['SolarDownwardRadiation', 'temp_hornsea', 'temp_solar', 'WindSpeed', 'WindSpeed:100']
