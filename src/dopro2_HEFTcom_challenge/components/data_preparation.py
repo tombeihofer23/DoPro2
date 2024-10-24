@@ -139,6 +139,9 @@ class DataPreparation:
                          season_encoded_df, windDir_encoded_df]
         merged_table = pd.concat(concat_tables, axis=1)
 
+        # Der Zeitraum der Messungen endet am 19.05.2024 23:30 Uhr -> Alle Wettervorhersagen danach sind nicht relevant und können gedropped werden
+        merged_table = merged_table.drop(merged_table[merged_table.valid_time >= "2024-05-20"].index).reset_index(drop=True)
+
         merged_table.to_parquet(f"{self.config.root_dir}/merged_data.parquet")
         logger.info("Merged energy and weather data: file safed under {}",
                     self.config.root_dir)
@@ -188,24 +191,27 @@ class DataPreparation:
         df_test = df_full.loc[df_full.reference_time.between(left="2023-09-01", right="2023-12-01", inclusive="left")]
 
         label_wind: Final = "Wind_MWh_credit"  # mglw. in config-Datein schreiben
-        featues_wind: list = ["RelativeHumidity", "temp_hornsea", 'temp_solar', "WindDirection",
-                              "WindDirection:100", "WindSpeed", "WindSpeed:100",
-                              "year", "month", "day", "hour", "hours_after", 'wind_interaction',
-                              'wind_interaction_100', 'humidity_wind_interaction', 'wind_gradient',
-                              'CloudCover_lag_1h', 'cloud_cover_change', 'time_of_day_afternoon',
-                              'time_of_day_morning', 'time_of_day_night', 'season_autumn',
-                              'season_spring', 'season_summer', 'season_winter', 'wind_dir_cat_E', 
-                              'wind_dir_cat_N', 'wind_dir_cat_NE', 'wind_dir_cat_NW',
-                              'wind_dir_cat_S', 'wind_dir_cat_SE', 'wind_dir_cat_SW', 'wind_dir_cat_W']
+        featues_wind: list = ["RelativeHumidity", "temp_hornsea", "temp_solar",
+                              "WindDirection", "WindDirection:100", "WindSpeed",
+                              "WindSpeed:100", "year", "month", "day", "hour",
+                              "hours_after", "wind_interaction",
+                              "wind_interaction_100", "humidity_wind_interaction",
+                              "wind_gradient", "time_of_day_afternoon",
+                              "time_of_day_morning", "time_of_day_night",
+                              "season_autumn", "season_spring", "season_summer",
+                              "season_winter", "wind_dir_cat_E", "wind_dir_cat_N",
+                              "wind_dir_cat_NE", "wind_dir_cat_NW", "wind_dir_cat_S",
+                              "wind_dir_cat_SE", "wind_dir_cat_SW", "wind_dir_cat_W"]
         label_solar: Final = "Solar_MWh_credit"  # mglw. in config-Datein schreiben
         featues_solar: list = ["CloudCover", "SolarDownwardRadiation", "temp_hornsea",
-                               "temp_solar", "year", "month", "day", "hour", "hours_after",
-                               'adjusted_solar_radiation', 'temp_x_solar_interaction',
-                               'temp_y_solar_interaction', 'time_of_day_afternoon',
-                               'time_of_day_morning', 'time_of_day_night', 'season_autumn',
-                               'season_spring', 'season_summer', 'season_winter', 'wind_dir_cat_E', 
-                               'wind_dir_cat_N', 'wind_dir_cat_NE', 'wind_dir_cat_NW',
-                               'wind_dir_cat_S', 'wind_dir_cat_SE', 'wind_dir_cat_SW', 'wind_dir_cat_W']
+                               "temp_solar", "year", "month", "day", "hour",
+                               "hours_after", "adjusted_solar_radiation",
+                               "temp_x_solar_interaction",
+                               "temp_y_solar_interaction", "CloudCover_lag_1h",
+                               "cloud_cover_change", "time_of_day_afternoon",
+                               "time_of_day_morning", "time_of_day_night",
+                               "season_autumn", "season_spring", "season_summer",
+                               "season_winter"]
 
         index_wind_train = df_train[df_train[label_wind].isna()].index
         index_solar_train = df_train[df_train[label_solar].isna()].index
