@@ -3,10 +3,10 @@
 import os
 from pathlib import Path
 from typing import Final
-import numpy as np
 
+import joblib
 from loguru import logger
-# import numpy as np
+import numpy as np
 import pandas as pd
 import re
 # import xarray as xr
@@ -89,6 +89,10 @@ class DataPreparation:
         return dwd_hornsea_df, dwd_solar_df
 
     def merge_data(self, energy, hornsea, solar) -> None:
+
+        os.makedirs(self.config.components_path, exist_ok=True)
+        logger.info("created directory at: {}", self.config.components_path)
+
         logger.info("Start merging energy and weather data")
 
         merged_table = (
@@ -118,6 +122,8 @@ class DataPreparation:
             time_of_day_encoded.toarray(),
             columns=time_of_day_encoder.get_feature_names_out()
         )
+        joblib.dump(time_of_day_encoder,
+                    Path(self.config.components_path) / "time_of_day_encoder")
 
         season_categories = merged_table[["season"]]
         season_encoder = OneHotEncoder()
@@ -126,6 +132,8 @@ class DataPreparation:
             season_encoded.toarray(),
             columns=season_encoder.get_feature_names_out()
         )
+        joblib.dump(season_encoder,
+                    Path(self.config.components_path) / "season_encoder")
 
         windDir_categories = merged_table[["wind_dir_cat"]]
         windDir_encoder = OneHotEncoder()
@@ -134,6 +142,8 @@ class DataPreparation:
             windDir_encoded.toarray(),
             columns=windDir_encoder.get_feature_names_out()
         )
+        joblib.dump(windDir_encoder,
+                    Path(self.config.components_path) / "windDir_encoder")
 
         concat_tables = [merged_table, time_of_day_encoded_df,
                          season_encoded_df, windDir_encoded_df]
@@ -206,8 +216,8 @@ class DataPreparation:
         featues_solar: list = ["CloudCover", "SolarDownwardRadiation", "temp_hornsea",
                                "temp_solar", "year", "month", "day", "hour",
                                "hours_after", "adjusted_solar_radiation",
-                               "temp_x_solar_interaction",
-                               "temp_y_solar_interaction", "CloudCover_lag_1h",
+                               "temp_x_solar_interaction", "temp_y_solar_interaction",
+                               "CloudCover_lag_1h", "RelativeHumidity",
                                "cloud_cover_change", "time_of_day_afternoon",
                                "time_of_day_morning", "time_of_day_night",
                                "season_autumn", "season_spring", "season_summer",
@@ -265,6 +275,9 @@ class DataPreparation:
 
         windspeed_train_pca = scale_pca_pipe.fit_transform(windspeed_train_pca)
         windspeed_test_pca = scale_pca_pipe.transform(windspeed_test_pca)
+
+        joblib.dump(scale_pca_pipe,
+                    Path(self.config.components_path) / "scale_pca_pipe_windspeed")
 
         x_wind_train["WindSpeedPCA"] = windspeed_train_pca
         x_wind_test["WindSpeedPCA"] = windspeed_test_pca

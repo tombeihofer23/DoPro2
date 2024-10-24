@@ -79,7 +79,8 @@ class ConfigurationManager:
             weather_data_path=config["weather_data_path"],
             energy_data_path=config["energy_data_path"],
             training_data_path=config["training_data_path"],
-            test_data_path=config["test_data_path"]
+            test_data_path=config["test_data_path"],
+            components_path=config["components_path"]
         )
 
         return data_preparation_config

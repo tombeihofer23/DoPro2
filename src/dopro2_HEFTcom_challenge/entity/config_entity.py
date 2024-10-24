@@ -34,6 +34,9 @@ class DataPreparationConfig:
     test_data_path: Path
     """Directory into which test data will be loaded."""
 
+    components_path: Path
+    """Directory where preprocessing components are stored."""
+
 
 @dataclass(frozen=True)
 class TrainingConfig:

@@ -260,13 +260,11 @@ class RebaseAPI:
         latest_forecast_df = (
             hornsea_df
             .merge(solar_df, how="outer", on=["reference_time", "valid_time"])
-            # .set_index("valid_time")
-            # .resample("30min")
-            # .interpolate("linear", limit=5)
             .rename(columns={"Temperature_x": "temp_hornsea",
                              "Temperature_y": "temp_solar",
                              "hours_after_x": "hours_after"})
-            .drop(columns="hours_after_y", axis=1)
+            .drop(columns=["hours_after_y", "latitude", "longitude"], axis=1)
+            .set_index("valid_time")
         )
         day_ahead_market_times_df = day_ahead_market_times()
         latest_forecast_df = (
@@ -274,15 +272,16 @@ class RebaseAPI:
             .loc[day_ahead_market_times_df]
             .reset_index(names="valid_time")
         )
-        latest_forecast_df["year"] = latest_forecast_df.valid_time.dt.year
-        latest_forecast_df["month"] = latest_forecast_df.valid_time.dt.month
-        latest_forecast_df["day"] = latest_forecast_df.valid_time.dt.day
-        latest_forecast_df["hour"] = latest_forecast_df.valid_time.dt.hour
+        # latest_forecast_df["year"] = latest_forecast_df.valid_time.dt.year
+        # latest_forecast_df["month"] = latest_forecast_df.valid_time.dt.month
+        # latest_forecast_df["day"] = latest_forecast_df.valid_time.dt.day
+        # latest_forecast_df["hour"] = latest_forecast_df.valid_time.dt.hour
 
-        columns = ["hours_after", "year", "month", "day", "hour", "CloudCover",
-                   "SolarDownwardRadiation", "temp_hornsea", "RelativeHumidity",
-                   "temp_solar", "WindDirection", "WindDirection:100", "WindSpeed",
-                   "WindSpeed:100", "valid_time"]
+        columns = ["valid_time", "hours_after", "CloudCover",
+                   "SolarDownwardRadiation", "temp_hornsea",
+                   "RelativeHumidity", "temp_solar", "WindDirection",
+                   "WindDirection:100", "WindSpeed", "WindSpeed:100"]
+                #    "year", "month", "day", "hour"]
         latest_forecast_df = latest_forecast_df.dropna()[columns]
 
         return latest_forecast_df

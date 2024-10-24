@@ -10,13 +10,19 @@ data_preparation:
   energy_data_path: artifacts/raw_data/energy
   training_data_path: artifacts/prepared_data/train_data
   test_data_path: artifacts/prepared_data/test_data
+  components_path: artifacts/components
 
 training:
   root_dir: artifacts/training
-  training_data_path: artifacts/prepared_data/model_data.parquet
-  trained_models_path: artifacts/training/models
+  training_data_path: artifacts/prepared_data/train_data
+  trained_models_path: artifacts/models
 
 evaluation:
-  path_to_models: artifacts/training/models
-  training_data_path: artifacts/prepared_data/model_data.parquet
+  path_to_models: artifacts/models
+  test_data_path: artifacts/prepared_data/test_data
   mlflow_uri: https://dagshub.com/tombeihofer23/DoPro2.mlflow
+
+prediction:
+  wind_model_dir: artifacts/models/wind
+  solar_model_dir: artifacts/models/solar
+  components_dir: artifacts/components
