@@ -1,42 +1,36 @@
 """Fifth ML Pipeline stage: predict on new data."""
 
-from dopro2_HEFTcom_challenge.utils import (
-    load_models,
-    prep_submission_in_json_format
-)
-from dopro2_HEFTcom_challenge.entity import RebaseAPI
+from typing import Final
+
+from loguru import logger
+
+from dopro2_HEFTcom_challenge.components import Prediction
+from dopro2_HEFTcom_challenge.config import ConfigurationManager
+
+
+STAGE_NAME: Final = "Prediction stage"
 
 
 class PredictionPipeline:
     """Pipeline that make predictions on you data from Rebase API."""
 
-    api: RebaseAPI = RebaseAPI()
-
     def __init__(self):
         pass
 
-    def predict(self) -> None:
-        """Load model and latest forecasts to make prediction."""
-
-        models = load_models("artifacts/training/models")  # type: ignore
-        latest_data = self.api.get_latest_forecast_data()
-
-        submission_data = latest_data.copy()
-        for i, model in enumerate(models):
-            submission_data[f"q{(i + 1) * 10}"] = model.predict(
-                latest_data
-            )
-            submission_data.loc[submission_data[f"q{(i + 1) * 10}"] < 0,
-                                f"q{(i + 1) * 10}"] = 0
-
-        submission_data["market_bid"] = submission_data["q50"]
-
-        submission_data_json = prep_submission_in_json_format(submission_data)
-        print(submission_data_json)
-
-        self.api.submit(submission_data_json)
+    def main(self) -> None:
+        config = ConfigurationManager()
+        prediction_config = config.get_prediction_config()
+        prediction = Prediction(config=prediction_config)
+        prediction.prepare_data()
+        prediction.predict()
 
 
 if __name__ == "__main__":
-    obj = PredictionPipeline()
-    obj.predict()
+    try:
+        logger.info(">>> stage {} started <<<", STAGE_NAME)
+        obj = PredictionPipeline()
+        obj.main()
+        logger.info(">>> stage {} completed <<<", STAGE_NAME)
+    except Exception as e:
+        logger.exception(e)
+        raise e

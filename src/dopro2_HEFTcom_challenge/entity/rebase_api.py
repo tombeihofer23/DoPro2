@@ -272,16 +272,12 @@ class RebaseAPI:
             .loc[day_ahead_market_times_df]
             .reset_index(names="valid_time")
         )
-        # latest_forecast_df["year"] = latest_forecast_df.valid_time.dt.year
-        # latest_forecast_df["month"] = latest_forecast_df.valid_time.dt.month
-        # latest_forecast_df["day"] = latest_forecast_df.valid_time.dt.day
-        # latest_forecast_df["hour"] = latest_forecast_df.valid_time.dt.hour
 
         columns = ["valid_time", "hours_after", "CloudCover",
                    "SolarDownwardRadiation", "temp_hornsea",
                    "RelativeHumidity", "temp_solar", "WindDirection",
                    "WindDirection:100", "WindSpeed", "WindSpeed:100"]
-                #    "year", "month", "day", "hour"]
+
         latest_forecast_df = latest_forecast_df.dropna()[columns]
 
         return latest_forecast_df

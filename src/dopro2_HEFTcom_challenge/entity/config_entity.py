@@ -67,3 +67,17 @@ class EvaluationConfig:
 
     mlflow_uri: str
     """URL to MLFlow dashboard."""
+
+
+@dataclass(frozen=True)
+class PredictionConfig:
+    """Entity-Class for prediction config params."""
+
+    wind_model_dir: Path
+    """Directory where the wind model is stored."""
+
+    solar_model_dir: Path
+    """Directory where the solar model is stored."""
+
+    components_dir: Path
+    """Directory where preprocessing components are stored."""

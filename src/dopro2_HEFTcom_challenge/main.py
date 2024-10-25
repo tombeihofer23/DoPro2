@@ -9,7 +9,8 @@ from dopro2_HEFTcom_challenge.pipeline import (
     DataIngestionTrainingPipeline,
     DataPreparationTrainingPipeline,
     ModelEvaluationPipeline,
-    ModelTrainingPipeline
+    ModelTrainingPipeline,
+    PredictionPipeline
 )
 
 
@@ -59,6 +60,18 @@ try:
     obj = ModelEvaluationPipeline()
     obj.main()
     logger.info(">>> stage {} completed <<<", STAGE_NAME_04)
+except Exception as e:
+    logger.exception(e)
+    raise e
+
+
+STAGE_NAME_05: Final = "Prediction stage"
+
+try:
+    logger.info(">>> stage {} started <<<", STAGE_NAME_05)
+    obj = PredictionPipeline()
+    obj.main()
+    logger.info(">>> stage {} completed <<<", STAGE_NAME_05)
 except Exception as e:
     logger.exception(e)
     raise e

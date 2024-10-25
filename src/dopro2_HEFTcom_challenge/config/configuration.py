@@ -14,6 +14,7 @@ from dopro2_HEFTcom_challenge.entity import (
     DataIngestionConfig,
     DataPreparationConfig,
     EvaluationConfig,
+    PredictionConfig,
     TrainingConfig
 )
 
@@ -124,3 +125,21 @@ class ConfigurationManager:
         )
 
         return evaluation_config
+
+    def get_prediction_config(self) -> PredictionConfig:
+        """
+        Get all config params.
+
+        :return: values from config.yaml
+        :rtype: PredictionConfig
+        """
+
+        config = self.config["prediction"]
+
+        prediction_config = PredictionConfig(
+            wind_model_dir=config["wind_model_dir"],
+            solar_model_dir=config["solar_model_dir"],
+            components_dir=config["components_dir"]
+        )
+
+        return prediction_config
